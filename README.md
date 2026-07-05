@@ -6,12 +6,14 @@ Welcome to the official documentation for the **Godot Source Pipeline**. This ut
 
 ## 📋 Essential Prerequisites (For Both Users & Developers)
 
-Before utilizing this pipeline, both players and developers must download and set up the following free tools. **Ensure that the version of Godot you download matches the version the target game was originally built with (e.g., Godot 3.x vs. Godot 4.x).**
+Before utilizing this pipeline, both players and developers must download and set up the following free tools. 
 
-### 1. ⚙️ Godot Engine Editor
+> 🟥 **THE GOLDEN ENGINE RULE:** > You **must** download the exact version of the Godot Editor that the target game was originally built with (e.g., Godot 4.2). Do not open an older game project inside a newer Godot version (e.g., using Godot 4.7 to edit a 4.2 game). A newer editor will silently force a project conversion, altering syntax and internal metadata, which completely breaks the delta-packer and causes the compiled game to **instantly crash on launch**.
+
+### 1. ⚙️ Godot Engine Editor (Version-Matched)
 * **Who needs it:** Both Users and Developers.
 * **Why it's required:** Developers use it to edit the game source and build the mod. Users/Players must use it at the end of the installation process to re-compile the source code back into a playable game executable.
-* **Where to get it:** [Official Godot Engine Website](https://godotengine.org/download)
+* **Where to get it:** Download the standalone, portable executable matching your game directly from the [Official Godot Engine Download Archive](https://godotengine.org/download/archive/).
 
 ### 2. 🔍 GDRE Tools (gdsdecomp)
 * **Who needs it:** Both Users and Developers.
@@ -55,8 +57,6 @@ Before running the injector, you need to turn the game's compiled executable int
 3. **Select the Game Folder (Step 2):** Click **Browse** next to Step 2 and choose the root folder of the uncompiled/decompiled Godot game source you generated in Phase 1.
 4. **Inject:** Click the large green **INJECT MOD SYSTEM** button.
 
-Once completed, a success dialog displays exactly how your game source was modified (New files added, Modified files updated, and Untouched files left alone).
-
 ---
 
 ### 🚀 Phase 3: Compiling Your Game Natively in Godot
@@ -64,7 +64,7 @@ Once completed, a success dialog displays exactly how your game source was modif
 Now that the modded files have been injected into the game source, you need to use the free, official Godot Engine editor to compile it back into a playable game executable.
 
 #### Step 1: Import the Project
-1. Open the version-matched **Godot Engine** editor.
+1. Open the standalone, **version-matched Godot Engine executable** that you downloaded in the Prerequisites section. 
 2. In the Godot Project Manager, click the **Import** button on the right-hand side.
 3. Click **Browse**, navigate into the decompiled/modded game folder from Phase 1, select the `project.godot` file, and click **Open**.
 4. Click **Import & Edit**. Godot will open the full workspace and automatically scan your new modded scripts.
@@ -86,7 +86,7 @@ Open your newly generated folder and run your custom game!
 
 ## 🛠️ Developer Guide: Complete Engineering Workflow
 
-This section outlines how to use reverse-engineering software to obtain the raw source code, implement features, and securely pack the final distribution delta file.
+This section outlines how to use reverse-engineering software to obtain the raw source code, implement features safely, and securely pack the final distribution delta file.
 
 ### 📋 Phase 1: Acquiring the Raw Source via GDRE
 Before editing anything, you must acquire a full, readable copy of the target game files to interact with:
@@ -96,10 +96,13 @@ Before editing anything, you must acquire a full, readable copy of the target ga
 4. **CRITICAL STEP:** Duplicate this folder immediately. Keep one copy perfectly clean as your **Unmodified Baseline Folder**. Use the other copy as your active development workspace.
 
 ### 💻 Phase 2: Modifying Source inside Godot Engine
-You must use the official Godot Editor to build your mod cleanly without breaking references:
-1. Fire up the version-matched **Godot Engine Editor**.
+You must use the official Godot Editor to build your mod cleanly without breaking backward-compatibility references:
+
+> 🟥 **CRITICAL PIPELINE RULE:** > Do not use a newer version of Godot to edit your mod workspace. If Godot forces you to run a "Project Upgrade/Conversion," close the editor immediately. Launch the standalone, version-matched Godot executable instead. Forced upgrades change background scene IDs and configuration schemas, which causes the **Developer Packer** to output a bloated file containing false-positive engine modifications, breaking the final mod entirely.
+
+1. Fire up the portable, version-matched **Godot Engine Editor**.
 2. Click **Import**, locate the `project.godot` file inside your development workspace folder, and open it.
-3. Implement your game logic, alter nodes, rewrite mechanics, or drop new variables into scripts natively.
+3. Implement your game logic, alter nodes, rewrite mechanics, or drop new variables into scripts natively. This system fully supports deeply nested folders (3+ folders deep, e.g., `\assets\scripts\entities\enemies\new_ai.gd`).
 4. Test and debug your changes thoroughly in-editor. When complete, close the Godot Editor.
 
 ### 📦 Phase 3: Automated Delta Packaging Pipeline
@@ -118,7 +121,7 @@ Now compress and obfuscate your custom creations into an anti-pirate format usin
 When you click generate, the tool runs your files through three distinct operational defenses to protect your work and the original game assets:
 
 ### 1. Smart Delta Separation (Anti-Piracy)
-If a game contains 10,000 core files and your mod only edits 5 scripts, the tool calculates the precise delta difference. It completely drops the 9,995 identical files. A user trying to unzip your mod will *never* get a complete, compilable copy of the base game.
+If a game contains 10,000 core files and your mod only edits 5 scripts, the tool calculates the precise delta difference. It completely drops the 9,995 identical files. A user trying to unzip your mod will *never* get a complete, compilable copy of the base game. Deleted files from the modded workspace are simply bypassed, leaving original game files cleanly intact.
 
 ### 2. Regular Expression Source Minification
 Before compressing your scripts, the tool passes all `.gd` (GDScript) and `.cs` (C#) files through an automated `re` parsing engine. 
