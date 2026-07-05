@@ -132,3 +132,41 @@ Before compressing your scripts, the tool passes all `.gd` (GDScript) and `.cs` 
 The final output is wrapped in a symmetric XOR bit-flipper using a custom hardware mask. 
 * If a malicious user attempts to drag and drop your `.gomodpak` back into extraction software like **GDRE Tools**, or standard archive managers like WinRAR or 7-Zip, the utility will fail to read the file headers and throw a fatal **"File is corrupted or invalid format"** exception.
 * **Zero Disk Footprint:** When a legitimate player runs the injector, the payload is decrypted directly into the system's volatile RAM (`io.BytesIO`). The unencrypted zip structure is never written to the local storage drive, preventing runtime scraping.
+
+# 🛠️ Troubleshoot
+
+### 🚨 The "Inside-Out" Zip Rule (Fixes Blank .gomodpak Files)
+When compressing your modified project files for the **Developer Packer**, **do not zip the outer root folder itself.** Zipping the folder adds an extra directory layer that breaks the utility's file-path comparison, causing it to generate an empty mod file.
+
+* **❌ WRONG:** `modded.zip` ➡️ `modded_folder/` ➡️ `project.godot`
+* **✅ CORRECT:** `modded.zip` ➡️ `project.godot`, `scenes/`, `assets/`
+
+**How to package properly:**
+1. Open your active `modded` workspace folder in File Explorer.
+2. Select all files and folders *inside* this directory (`Ctrl + A`).
+3. Right-click any highlighted file and choose **Compress to ZIP file** (or use 7-Zip/WinRAR). 
+
+---
+
+### 🔓 Fixing "Ghost Saves" (Windows Read-Only Lock)
+If your source files came from a web repository (like GitHub), Windows often locks them. This prevents the Godot Editor from writing changes to your hard drive, even though your new nodes appear perfectly live in the editor.
+
+#### 🔴 Symptoms:
+* Your modifications (like a new `Label` node) show up perfectly inside the Godot Editor.
+* When you open the corresponding `.tscn` file in a text editor like Notepad++, your modifications are completely missing.
+
+#### 🛠️ The Fix:
+1. **Close the Godot Editor completely** to release file handles.
+2. Right-click your main `modded` source folder and select **Properties**.
+3. Under the *General* tab, look at the **Attributes** section at the bottom.
+4. Click the checkbox next to **Read-only** until the box is completely **empty/blank** (no checkmark, no solid square).
+5. Click **Apply**, choose **"Apply changes to this folder, subfolders, and files"**, and click **OK**.
+6. Open your workspace folder and delete the hidden **`.godot`** (or **`.import`** for Godot 3) cache directory.
+7. Re-open Godot, make a minor tweak to force a rewrite, and click **Scene -> Save All Scenes**.
+
+---
+
+### 🔍 Quick Pipeline Verification
+Before running the injector, right-click your generated `.gomodpak` file and open it in **Notepad++**. Press `Ctrl + F` and search for your modified node (e.g., `"Label"`). 
+
+If the file is completely scrambled but contains your node text, your pipeline worked perfectly! If it cannot find your text, re-verify **The "Inside-Out" Zip Rule** above.
